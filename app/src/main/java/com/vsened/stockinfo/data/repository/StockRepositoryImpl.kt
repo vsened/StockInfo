@@ -1,8 +1,9 @@
 package com.vsened.stockinfo.data.repository
 
-import com.opencsv.CSVReader
+import com.vsened.stockinfo.data.csv.CSVParser
 import com.vsened.stockinfo.data.local.StockDatabase
 import com.vsened.stockinfo.data.mapper.toCompanyListing
+import com.vsened.stockinfo.data.mapper.toCompanyListingEntity
 import com.vsened.stockinfo.data.remote.StockApi
 import com.vsened.stockinfo.domain.model.CompanyListing
 import com.vsened.stockinfo.domain.repository.StockRepository
@@ -11,17 +12,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.io.IOException
-import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class StockRepositoryImpl @Inject constructor(
     val api: StockApi,
-    val db: StockDatabase
-): StockRepository {
+    val db: StockDatabase,
+    val companyListingsParser: CSVParser<CompanyListing>
+) : StockRepository {
 
     private val dao = db.dao
+
 
     override suspend fun getCompanyListings(
         fetchFromRemote: Boolean,
@@ -41,13 +43,31 @@ class StockRepositoryImpl @Inject constructor(
             }
             val removeListings = try {
                 val response = api.getListings()
-                TODO("Get data from csv file!")
+                companyListingsParser.parse(response.byteStream())
             } catch (e: IOException) {
                 e.printStackTrace()
                 emit(Resource.Error(message = e.message ?: "IOException"))
-            }catch (e: HttpException) {
+                null
+            } catch (e: HttpException) {
                 e.printStackTrace()
                 emit(Resource.Error(message = e.message ?: "HttpException"))
+                null
+            }
+            removeListings?.let { listings ->
+                dao.clearCompanyListings()
+                dao.insertCompanyListings(
+                    listings.map {
+                        it.toCompanyListingEntity()
+                    }
+                )
+                emit(Resource.Success(
+                    data = dao
+                        .searchCompanyListing("")
+                        .map {
+                            it.toCompanyListing()
+                        }
+                ))
+                emit(Resource.Loading(false))
             }
         }
     }
