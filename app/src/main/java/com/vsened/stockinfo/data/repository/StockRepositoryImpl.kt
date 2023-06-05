@@ -2,6 +2,7 @@ package com.vsened.stockinfo.data.repository
 
 import com.vsened.stockinfo.data.csv.CSVParser
 import com.vsened.stockinfo.data.local.StockDatabase
+import com.vsened.stockinfo.data.mapper.toCompanyInfo
 import com.vsened.stockinfo.data.mapper.toCompanyListing
 import com.vsened.stockinfo.data.mapper.toCompanyListingEntity
 import com.vsened.stockinfo.data.remote.StockApi
@@ -93,6 +94,19 @@ class StockRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCompanyInfo(symbol: String): Resource<CompanyInfo> {
-        TODO("Not yet implemented")
+        return try {
+            val result = api.getCompanyInfo(symbol)
+            Resource.Success(result.toCompanyInfo())
+        } catch(e: IOException) {
+            e.printStackTrace()
+            Resource.Error(
+                message = "Couldn't load company info"
+            )
+        } catch (e: HttpException) {
+            e.printStackTrace()
+            Resource.Error(
+                message = "Couldn't load company info"
+            )
+        }
     }
 }
