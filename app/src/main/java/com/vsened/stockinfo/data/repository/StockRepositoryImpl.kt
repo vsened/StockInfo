@@ -1,13 +1,13 @@
 package com.vsened.stockinfo.data.repository
 
-import android.util.Log
 import com.vsened.stockinfo.data.csv.CSVParser
 import com.vsened.stockinfo.data.local.StockDatabase
 import com.vsened.stockinfo.data.mapper.toCompanyListing
 import com.vsened.stockinfo.data.mapper.toCompanyListingEntity
-import com.vsened.stockinfo.data.mapper.toCompanyListingList
 import com.vsened.stockinfo.data.remote.StockApi
+import com.vsened.stockinfo.domain.model.CompanyInfo
 import com.vsened.stockinfo.domain.model.CompanyListing
+import com.vsened.stockinfo.domain.model.IntradayInfo
 import com.vsened.stockinfo.domain.repository.StockRepository
 import com.vsened.stockinfo.util.Resource
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +21,8 @@ import javax.inject.Singleton
 class StockRepositoryImpl @Inject constructor(
     private val api: StockApi,
     private val db: StockDatabase,
-    private val companyListingsParser: CSVParser<CompanyListing>
+    private val companyListingsParser: CSVParser<CompanyListing>,
+    private val intradayInfoParser: CSVParser<IntradayInfo>,
 ) : StockRepository {
 
     private val dao = db.dao
@@ -34,7 +35,7 @@ class StockRepositoryImpl @Inject constructor(
             emit(Resource.Loading(true))
             val localListings = dao.searchCompanyListing(query)
             emit(Resource.Success(
-                localListings.toCompanyListingList()
+                localListings.map { it.toCompanyListing() }
             ))
 
             val isDbEmpty = localListings.isEmpty() && query.isBlank()
@@ -69,5 +70,29 @@ class StockRepositoryImpl @Inject constructor(
                 emit(Resource.Loading(false))
             }
         }
+    }
+
+    override suspend fun getIntradayInfo(symbol: String): Resource<List<IntradayInfo>> {
+        return try {
+            val response = api.getIntradayInfo(symbol)
+            val result = intradayInfoParser.parse(response.byteStream())
+            Resource.Success(
+                result
+            )
+        } catch(e: IOException) {
+            e.printStackTrace()
+            Resource.Error(
+                message = "Couldn't load intraday data"
+            )
+        } catch (e: HttpException) {
+            e.printStackTrace()
+            Resource.Error(
+                message = "Couldn't load intraday data"
+            )
+        }
+    }
+
+    override suspend fun getCompanyInfo(symbol: String): Resource<CompanyInfo> {
+        TODO("Not yet implemented")
     }
 }
