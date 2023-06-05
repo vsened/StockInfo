@@ -18,3 +18,11 @@ fun CompanyListing.toCompanyListingEntity(): CompanyListingEntity {
         exchange =  exchange
     )
 }
+
+fun List<CompanyListingEntity>.toCompanyListingList(): List<CompanyListing> {
+    val result = ArrayList<CompanyListing>()
+    for (i in indices) {
+        result.add(get(i).toCompanyListing())
+    }
+    return result
+}

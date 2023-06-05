@@ -1,9 +1,11 @@
 package com.vsened.stockinfo.data.repository
 
+import android.util.Log
 import com.vsened.stockinfo.data.csv.CSVParser
 import com.vsened.stockinfo.data.local.StockDatabase
 import com.vsened.stockinfo.data.mapper.toCompanyListing
 import com.vsened.stockinfo.data.mapper.toCompanyListingEntity
+import com.vsened.stockinfo.data.mapper.toCompanyListingList
 import com.vsened.stockinfo.data.remote.StockApi
 import com.vsened.stockinfo.domain.model.CompanyListing
 import com.vsened.stockinfo.domain.repository.StockRepository
@@ -29,42 +31,40 @@ class StockRepositoryImpl @Inject constructor(
         query: String
     ): Flow<Resource<List<CompanyListing>>> {
         return flow {
-            emit(Resource.Loading(isLoading = true))
+            emit(Resource.Loading(true))
             val localListings = dao.searchCompanyListing(query)
             emit(Resource.Success(
-                data = localListings.map { it.toCompanyListing() }
+                localListings.toCompanyListingList()
             ))
+
             val isDbEmpty = localListings.isEmpty() && query.isBlank()
             val shouldJustLoadFromCache = !isDbEmpty && !fetchFromRemote
-            if (shouldJustLoadFromCache) {
+            if(shouldJustLoadFromCache) {
                 emit(Resource.Loading(false))
                 return@flow
             }
-            val removeListings = try {
+            val remoteListings = try {
                 val response = api.getListings()
                 companyListingsParser.parse(response.byteStream())
-            } catch (e: IOException) {
+            } catch(e: IOException) {
                 e.printStackTrace()
-                emit(Resource.Error(message = e.message ?: "IOException"))
+                emit(Resource.Error("Couldn't load data"))
                 null
             } catch (e: HttpException) {
                 e.printStackTrace()
-                emit(Resource.Error(message = e.message ?: "HttpException"))
+                emit(Resource.Error("Couldn't load data"))
                 null
             }
-            removeListings?.let { listings ->
+
+            remoteListings?.let { listings ->
                 dao.clearCompanyListings()
                 dao.insertCompanyListings(
-                    listings.map {
-                        it.toCompanyListingEntity()
-                    }
+                    listings.map { it.toCompanyListingEntity() }
                 )
                 emit(Resource.Success(
                     data = dao
                         .searchCompanyListing("")
-                        .map {
-                            it.toCompanyListing()
-                        }
+                        .map { it.toCompanyListing() }
                 ))
                 emit(Resource.Loading(false))
             }

@@ -31,7 +31,9 @@ fun CompanyItem(
             modifier = modifier.weight(1f)
         ) {
             Row(
-                modifier = modifier.fillMaxWidth()
+                modifier = modifier
+                    .fillMaxWidth(),
+
             ) {
                 Text(
                     text = company.name,
@@ -52,7 +54,7 @@ fun CompanyItem(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "(${company.symbol}",
+                text = "(${company.symbol})",
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onBackground
             )

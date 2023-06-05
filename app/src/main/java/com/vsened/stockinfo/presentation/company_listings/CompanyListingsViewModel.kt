@@ -1,5 +1,6 @@
 package com.vsened.stockinfo.presentation.company_listings
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +11,6 @@ import com.vsened.stockinfo.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,20 +23,22 @@ class CompanyListingsViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    init {
+        getCompanyListings()
+    }
+
     fun onEvent(event: CompanyListingEvent) {
-        when (event) {
+        when(event) {
+            is CompanyListingEvent.Refresh -> {
+                getCompanyListings(fetchFromRemote = true)
+            }
             is CompanyListingEvent.OnSearchQueryChange -> {
-                state = state.copy(
-                    searchQuery = event.query
-                )
+                state = state.copy(searchQuery = event.query)
                 searchJob?.cancel()
                 searchJob = viewModelScope.launch {
                     delay(500L)
                     getCompanyListings()
                 }
-            }
-            CompanyListingEvent.Refresh -> {
-                getCompanyListings(fetchFromRemote = true)
             }
         }
     }
@@ -46,23 +48,22 @@ class CompanyListingsViewModel @Inject constructor(
         fetchFromRemote: Boolean = false
     ) {
         viewModelScope.launch {
-            repository.getCompanyListings(fetchFromRemote, query)
+            repository
+                .getCompanyListings(fetchFromRemote, query)
                 .collect { result ->
-                    when (result) {
-                        is Resource.Error -> {
-                            TODO()
-                        }
-                        is Resource.Loading -> {
-                            state = state.copy(
-                                isLoading = result.isLoading
-                            )
-                        }
+                    when(result) {
                         is Resource.Success -> {
                             result.data?.let { listings ->
                                 state = state.copy(
                                     companies = listings
                                 )
                             }
+                        }
+                        is Resource.Error -> {
+                            Log.d("GetCompanyListings", "Something wrong: ${result.message}")
+                        }
+                        is Resource.Loading -> {
+                            state = state.copy(isLoading = result.isLoading)
                         }
                     }
                 }

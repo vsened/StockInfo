@@ -14,16 +14,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.vsened.stockinfo.domain.model.CompanyListing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Destination(start = true)
 fun CompanyListingsScreen(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     viewModel: CompanyListingsViewModel = hiltViewModel()
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(
@@ -52,6 +53,7 @@ fun CompanyListingsScreen(
             maxLines = 1,
             singleLine = true
         )
+
         SwipeRefresh(
             state = swipeRefreshState,
             onRefresh = {
