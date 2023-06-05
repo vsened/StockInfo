@@ -1,6 +1,8 @@
 package com.vsened.stockinfo.data.mapper
 
 import com.vsened.stockinfo.data.local.CompanyListingEntity
+import com.vsened.stockinfo.data.remote.dto.CompanyInfoDto
+import com.vsened.stockinfo.domain.model.CompanyInfo
 import com.vsened.stockinfo.domain.model.CompanyListing
 
 fun CompanyListingEntity.toCompanyListing(): CompanyListing {
@@ -19,10 +21,12 @@ fun CompanyListing.toCompanyListingEntity(): CompanyListingEntity {
     )
 }
 
-fun List<CompanyListingEntity>.toCompanyListingList(): List<CompanyListing> {
-    val result = ArrayList<CompanyListing>()
-    for (i in indices) {
-        result.add(get(i).toCompanyListing())
-    }
-    return result
+fun CompanyInfoDto.toCompanyInfo(): CompanyInfo {
+    return CompanyInfo(
+        symbol = symbol ?: "",
+        description = description ?: "",
+        name = name ?: "",
+        country = country ?: "",
+        industry = industry ?: ""
+    )
 }
