@@ -5,7 +5,7 @@ import com.vsened.stockinfo.domain.model.IntradayInfo
 
 data class CompanyInfoState(
     val stockInfos: List<IntradayInfo> = emptyList(),
-    val companyInfo: CompanyInfo? = null,
+    val company: CompanyInfo? = null,
     val isLoading: Boolean = false,
-    val errer: String? = null
+    val error: String? = null
 )
