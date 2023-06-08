@@ -3,13 +3,13 @@ package com.vsened.stockinfo.data.csv
 import com.opencsv.CSVReader
 import com.vsened.stockinfo.data.mapper.toIntradayInfo
 import com.vsened.stockinfo.data.remote.dto.IntradayInfoDto
-import com.vsened.stockinfo.domain.model.CompanyListing
 import com.vsened.stockinfo.domain.model.IntradayInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.time.LocalDateTime
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,7 +28,17 @@ class IntradayInfoParser @Inject constructor(): CSVParser<IntradayInfo> {
                     dto.toIntradayInfo()
                 }
                 .filter {
-                    it.date.dayOfMonth == LocalDateTime.now().minusDays(1).dayOfMonth
+                    when (Calendar.DAY_OF_WEEK) {
+                        // Cause sunday is day off on stock markets
+                        2 -> {
+                            it.date.dayOfMonth == LocalDateTime.now().minusDays(2).dayOfMonth
+                        }
+                        else -> {
+                            it.date.dayOfMonth == LocalDateTime.now().minusDays(1).dayOfMonth
+                        }
+                    }
+
+
                 }
                 .sortedBy {
                     it.date.hour

@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.NavGraph
+import com.vsened.stockinfo.presentation.company_info.CompanyInfoScreen
 import com.vsened.stockinfo.presentation.company_listings.CompanyListingsScreen
 import com.vsened.stockinfo.ui.theme.StockInfoTheme
 import com.vsened.stockinfo.util.Screen
@@ -38,6 +39,23 @@ class MainActivity() : ComponentActivity() {
                     ) {
                         composable(route = Screen.CompanyListings.route) {
                             CompanyListingsScreen(navController = navController)
+                        }
+                        composable(route = Screen.CompanyInfo.route
+                                + "?symbol={symbol}",
+                            arguments = listOf(
+                                navArgument(
+                                    name = "symbol"
+                                ) {
+                                    type = NavType.StringType
+                                    defaultValue = ""
+                                }
+                            )
+                        ) {
+                            val symbol = it.arguments?.getString("symbol") ?: ""
+                            CompanyInfoScreen(
+                                navController = navController,
+                                symbol = symbol
+                            )
                         }
                     }
                 }

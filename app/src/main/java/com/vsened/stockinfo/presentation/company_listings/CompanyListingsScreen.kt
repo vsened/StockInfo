@@ -19,6 +19,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.vsened.stockinfo.domain.model.CompanyListing
+import com.vsened.stockinfo.presentation.company_info.CompanyInfoScreen
+import com.vsened.stockinfo.util.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +72,10 @@ fun CompanyListingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                TODO()
+                                navController.navigate(
+                                    Screen.CompanyInfo.route +
+                                            "?symbol=${company.symbol}"
+                                )
                             }
                             .padding(16.dp)
                     )
